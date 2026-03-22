@@ -1,0 +1,55 @@
+{
+  "news": {
+    "finance": [
+      {
+        "name": "한국경제 증권",
+        "url": "https://www.hankyung.com/feed/stock",
+        "category": "재테크/주식"
+      },
+      {
+        "name": "매일경제 증권",
+        "url": "https://www.mk.co.kr/rss/50200011/",
+        "category": "재테크/주식"
+      },
+      {
+        "name": "연합뉴스 경제",
+        "url": "https://www.yna.co.kr/rss/economy.xml",
+        "category": "재테크/주식"
+      }
+    ],
+    "policy": [
+      {
+        "name": "정책브리핑",
+        "url": "https://www.korea.kr/rss/policy.xml",
+        "category": "정책"
+      },
+      {
+        "name": "기획재정부",
+        "url": "https://www.moef.go.kr/rss/policy.xml",
+        "category": "정책"
+      }
+    ],
+    "health": [
+      {
+        "name": "연합뉴스 건강",
+        "url": "https://www.yna.co.kr/rss/health.xml",
+        "category": "건강"
+      }
+    ]
+  },
+  "stock": {
+    "domestic": {
+      "kospi": "https://finance.naver.com/sise/sise_index.naver?code=KOSPI",
+      "kosdaq": "https://finance.naver.com/sise/sise_index.naver?code=KOSDAQ"
+    },
+    "international": {
+      "sp500": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?range=1d&interval=1d",
+      "nasdaq": "https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC?range=1d&interval=1d",
+      "dow": "https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?range=1d&interval=1d"
+    }
+  },
+  "keywords": {
+    "senior": ["국민연금", "노인", "시니어", "은퇴", "퇴직", "연금", "건강보험", "복지", "요양", "기초연금"],
+    "finance": ["코스피", "코스닥", "환율", "금리", "부동산", "ETF", "배당", "주식", "투자", "재테크"]
+  }
+}

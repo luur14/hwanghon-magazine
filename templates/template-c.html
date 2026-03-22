@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px;
+    height: 1080px;
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+  }
+
+  .card {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    display: flex;
+  }
+
+  /* 왼쪽 컬러 사이드바 */
+  .sidebar {
+    width: 100px;
+    background: linear-gradient(180deg, #2c3e50 0%, #3498db 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sidebar.finance { background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+  .sidebar.policy { background: linear-gradient(180deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%); }
+  .sidebar.health { background: linear-gradient(180deg, #6b2737 0%, #c0392b 50%, #e74c3c 100%); }
+
+  .sidebar-text {
+    writing-mode: vertical-rl;
+    color: rgba(255,255,255,0.4);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 4px;
+  }
+
+  /* 메인 콘텐츠 */
+  .main {
+    flex: 1;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 상단 헤더 */
+  .header {
+    padding: 50px 50px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .category-tag {
+    font-size: 16px;
+    font-weight: 700;
+    color: #3498db;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 6px;
+  }
+
+  .category-tag.finance { color: #0f3460; border-color: #0f3460; }
+  .category-tag.policy { color: #2d6a4f; border-color: #2d6a4f; }
+  .category-tag.health { color: #c0392b; border-color: #c0392b; }
+
+  .date {
+    color: #999;
+    font-size: 18px;
+    font-weight: 400;
+  }
+
+  /* 타이틀 */
+  .title-section {
+    padding: 0 50px;
+  }
+
+  .title {
+    font-size: 48px;
+    font-weight: 900;
+    color: #1a1a1a;
+    line-height: 1.3;
+  }
+
+  .subtitle {
+    font-size: 22px;
+    color: #777;
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  /* 이미지 + 요약 영역 */
+  .body-section {
+    flex: 1;
+    padding: 30px 50px;
+    display: flex;
+    gap: 30px;
+  }
+
+  .image-area {
+    width: 380px;
+    height: 340px;
+    border-radius: 16px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+  }
+
+  .image-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .summary-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .summary-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .summary-number {
+    width: 36px;
+    height: 36px;
+    background: #3498db;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .summary-number.finance { background: #0f3460; }
+  .summary-number.policy { background: #2d6a4f; }
+  .summary-number.health { background: #c0392b; }
+
+  .summary-text {
+    font-size: 22px;
+    color: #333;
+    line-height: 1.5;
+  }
+
+  /* 하단 */
+  .footer {
+    padding: 20px 50px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e8e8e8;
+    margin: 0 50px;
+  }
+
+  .brand {
+    font-size: 20px;
+    color: #bbb;
+  }
+
+  .brand-name {
+    color: #555;
+    font-weight: 700;
+  }
+
+  .page-number {
+    color: #ccc;
+    font-size: 18px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="sidebar {{CATEGORY_CLASS}}">
+    <div class="sidebar-text">HWANGHON MAGAZINE</div>
+  </div>
+  <div class="main">
+    <div class="header">
+      <div class="category-tag {{CATEGORY_CLASS}}">{{CATEGORY}}</div>
+      <div class="date">{{DATE}}</div>
+    </div>
+    <div class="title-section">
+      <div class="title">{{TITLE}}</div>
+      <div class="subtitle">{{SUBTITLE}}</div>
+    </div>
+    <div class="body-section">
+      <div class="image-area">
+        <img src="{{IMAGE_URL}}" alt="">
+      </div>
+      <div class="summary-area">
+        {{SUMMARY_ITEMS}}
+      </div>
+    </div>
+    <div class="footer">
+      <div class="brand"><span class="brand-name">황혼 즈음에</span> 매거진</div>
+      <div class="page-number">{{PAGE}}</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

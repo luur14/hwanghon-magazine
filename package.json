@@ -1,0 +1,29 @@
+{
+  "name": "hwanghon-magazine",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luur14/hwanghon-magazine.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/luur14/hwanghon-magazine/issues"
+  },
+  "homepage": "https://github.com/luur14/hwanghon-magazine#readme",
+  "dependencies": {
+    "axios": "^1.13.6",
+    "cheerio": "^1.2.0",
+    "dayjs": "^1.11.20",
+    "groq-sdk": "^1.1.1",
+    "puppeteer": "^24.40.0",
+    "rss-parser": "^3.13.0"
+  }
+}
