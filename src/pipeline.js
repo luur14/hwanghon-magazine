@@ -1,10 +1,11 @@
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const fs = require('fs');
 const path = require('path');
 const dayjs = require('dayjs');
 
 const { collectAll } = require('./collectors/news-collector');
 const { collectImagesForNews } = require('./collectors/image-collector');
-const { generateCardNewsText, formatForRenderer } = require('./generators/text-generator');
+const { generateCardNewsText } = require('./generators/text-generator');
 const { renderCardNewsSet } = require('./renderers/card-renderer');
 
 const OUTPUT_DIR = path.join(__dirname, '../output');
@@ -16,12 +17,12 @@ for (const dir of ['output', 'output/cardnews', 'output/images']) {
 }
 
 /**
- * 전체 카드뉴스 생성 파이프라인
+ * 전체 카드뉴스 생성 파이프라인 (5장 세트)
  */
 async function runPipeline() {
   const startTime = Date.now();
   console.log('╔══════════════════════════════════════════╗');
-  console.log('║   황혼 즈음에 - 카드뉴스 자동 생성 파이프라인   ║');
+  console.log('║     황혼 매거진 - 카드뉴스 자동 생성      ║');
   console.log('╚══════════════════════════════════════════╝');
   console.log(`시작: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n`);
 
@@ -34,85 +35,56 @@ async function runPipeline() {
       return null;
     }
 
-    // ━━━ 2단계: AI 텍스트 생성 ━━━
+    // ━━━ 2단계: AI 텍스트 생성 (5장 세트) ━━━
     console.log('\n━━━ [2/4] 카드뉴스 텍스트 생성 (Groq) ━━━');
-    const cardnewsText = await generateCardNewsText(newsData);
-    const cardnewsFormatted = formatForRenderer(cardnewsText);
+    const cardData = await generateCardNewsText(newsData);
 
-    // 생성된 텍스트 저장
     fs.writeFileSync(
       path.join(OUTPUT_DIR, 'cardnews.json'),
-      JSON.stringify({ generated: cardnewsText, formatted: cardnewsFormatted }, null, 2),
+      JSON.stringify(cardData, null, 2),
       'utf-8'
     );
 
-    // ━━━ 3단계: 이미지 수집 ━━━
-    console.log('\n━━━ [3/4] 이미지 수집 (Freepik) ━━━');
-    const imageItems = cardnewsText.cardnews.map(card => ({
-      title: card.title.replace('\n', ' '),
-      category: card.category,
-      imageKeyword: card.imageKeyword
-    }));
+    // ━━━ 3단계: 이미지 수집 (커버1 + 콘텐츠3) ━━━
+    console.log('\n━━━ [3/4] 이미지 수집 ━━━');
 
-    // imageKeyword 기반으로 이미지 수집
-    const imageResults = await collectImagesForNews(
-      imageItems.map(item => ({
-        title: item.imageKeyword, // 영어 키워드로 검색
-        category: item.category
-      }))
-    );
+    // 커버 키워드: 첫 번째 슬라이드 키워드를 공유하거나 커버 카테고리 기반
+    const coverKeyword = cardData.slides[0]?.imageKeyword || 'business news magazine';
 
-    // ━━━ 4단계: PNG 렌더링 ━━━
-    console.log('\n━━━ [4/4] 카드뉴스 PNG 렌더링 ━━━');
-    const allRendered = [];
+    const imageItems = [
+      { title: cardData.coverTitle.replace(/\\n/g, ' '), category: cardData.coverCategory, imageKeyword: coverKeyword },
+      ...cardData.slides.map(s => ({ title: s.title, category: s.category, imageKeyword: s.imageKeyword }))
+    ];
 
-    for (let i = 0; i < cardnewsFormatted.length; i++) {
-      const card = cardnewsFormatted[i];
-      const image = imageResults[i];
+    const imageResults = await collectImagesForNews(imageItems);
 
-      // 이미지 URL 설정
-      if (image && image.imageUrl) {
-        card.slides[0].imageUrl = image.imageUrl;
-        card.slides[0].imagePath = image.imagePath;
-      }
+    // 이미지 경로 정리
+    const images = {
+      cover: imageResults[0]?.imagePath || null,
+      slides: cardData.slides.map((_, i) => imageResults[i + 1]?.imagePath || null)
+    };
 
-      console.log(`\n  카드 ${i + 1}/${cardnewsFormatted.length}: ${card.slides[0].title.replace('\n', ' ')}`);
-      const rendered = await renderCardNewsSet(card);
-      allRendered.push({
-        ...card,
-        renderedFiles: rendered
-      });
-    }
+    // ━━━ 4단계: PNG 렌더링 (5장) ━━━
+    console.log('\n━━━ [4/4] 카드뉴스 PNG 렌더링 (5장) ━━━');
+    const renderedFiles = await renderCardNewsSet(cardData, images);
 
     // ━━━ 결과 요약 ━━━
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log('\n╔══════════════════════════════════════════╗');
     console.log('║             파이프라인 완료!              ║');
     console.log('╚══════════════════════════════════════════╝');
+    console.log(`에디션: ${cardData.edition}`);
     console.log(`소요 시간: ${elapsed}초`);
-    console.log(`생성된 카드뉴스: ${allRendered.length}개`);
-    console.log(`총 이미지 파일: ${allRendered.reduce((sum, r) => sum + r.renderedFiles.length, 0)}개`);
+    console.log(`생성된 슬라이드: ${renderedFiles.length}장`);
     console.log(`\n출력 폴더: ${path.join(OUTPUT_DIR, 'cardnews')}`);
+    renderedFiles.forEach((f, i) => console.log(`  ${i + 1}. ${path.basename(f)}`));
 
-    // 결과 목록
-    allRendered.forEach((card, i) => {
-      console.log(`  ${i + 1}. [${card.slides[0].category}] ${card.slides[0].title.replace('\n', ' ')} (템플릿 ${card.template.toUpperCase()})`);
-      card.renderedFiles.forEach(f => console.log(`     → ${path.basename(f)}`));
-    });
-
-    // 최종 결과 JSON 저장
+    // 최종 결과 JSON
     const finalResult = {
       generatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+      edition: cardData.edition,
       elapsedSeconds: parseFloat(elapsed),
-      cards: allRendered.map(card => ({
-        id: card.id,
-        template: card.template,
-        category: card.slides[0].category,
-        title: card.slides[0].title,
-        subtitle: card.slides[0].subtitle,
-        summaryPoints: card.slides[0].summaryPoints,
-        files: card.renderedFiles.map(f => path.basename(f))
-      }))
+      slides: renderedFiles.map(f => path.basename(f))
     };
 
     fs.writeFileSync(
@@ -132,7 +104,6 @@ async function runPipeline() {
 
 module.exports = { runPipeline };
 
-// 직접 실행
 if (require.main === module) {
   runPipeline()
     .then(() => process.exit(0))

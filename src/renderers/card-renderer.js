@@ -5,114 +5,123 @@ const dayjs = require('dayjs');
 
 const TEMPLATES_DIR = path.join(__dirname, '../../templates');
 const OUTPUT_DIR = path.join(__dirname, '../../output/cardnews');
+const LOGO_PATH = path.join(__dirname, '../../assets/logo.png');
 
 /**
- * 카테고리 클래스 매핑
+ * 로고를 base64 data URI로 변환
  */
-function getCategoryClass(category) {
-  if (category.includes('주식') || category.includes('재테크') || category.includes('투자')) return 'finance';
-  if (category.includes('정책') || category.includes('연금') || category.includes('복지')) return 'policy';
-  if (category.includes('건강')) return 'health';
-  return 'finance';
+function getLogoDataUri() {
+  if (!fs.existsSync(LOGO_PATH)) return '';
+  const buf = fs.readFileSync(LOGO_PATH);
+  return `data:image/png;base64,${buf.toString('base64')}`;
 }
 
 /**
- * 요약 포인트를 HTML로 변환 (템플릿별)
+ * 이미지를 base64 data URI로 변환
  */
-function renderSummaryItems(points, template, categoryClass) {
-  if (template === 'a') {
-    return points.map(p =>
-      `<div class="summary-item"><span class="summary-icon">▸</span><span>${p}</span></div>`
-    ).join('\n');
-  }
-  if (template === 'b') {
-    return points.map(p =>
-      `<div class="summary-item"><div class="bullet ${categoryClass}"></div><span>${p}</span></div>`
-    ).join('\n');
-  }
-  if (template === 'c') {
-    return points.map((p, i) =>
-      `<div class="summary-item"><div class="summary-number ${categoryClass}">${i + 1}</div><div class="summary-text">${p}</div></div>`
-    ).join('\n');
-  }
-  return '';
+function imageToDataUri(imagePath) {
+  if (!imagePath || !fs.existsSync(imagePath)) return '';
+  const buf = fs.readFileSync(imagePath);
+  const ext = path.extname(imagePath).slice(1) || 'jpeg';
+  return `data:image/${ext};base64,${buf.toString('base64')}`;
 }
 
 /**
- * 템플릿에 데이터 바인딩
+ * 슬라이드 1: 커버
  */
-function bindTemplate(templateHtml, data) {
-  const categoryClass = getCategoryClass(data.category);
-  const summaryHtml = renderSummaryItems(data.summaryPoints, data.template, categoryClass);
+function buildCoverHtml(data, coverImagePath) {
+  const html = fs.readFileSync(path.join(TEMPLATES_DIR, 'slide-cover.html'), 'utf-8');
+  const logoUri = getLogoDataUri();
+  const imageUri = imageToDataUri(coverImagePath) || '';
 
-  // 이미지를 base64 data URI로 변환 (로컬 파일 우선)
-  let imageUri = data.imageUrl || '';
-  if (data.imagePath && fs.existsSync(data.imagePath)) {
-    const imgBuffer = fs.readFileSync(data.imagePath);
-    const ext = path.extname(data.imagePath).slice(1) || 'jpeg';
-    imageUri = `data:image/${ext};base64,${imgBuffer.toString('base64')}`;
-  }
+  const previewItems = (data.previewItems || []).map((text, i) =>
+    `<div class="preview-item">
+      <div class="preview-num">${i + 1}</div>
+      <span class="preview-text">${text}</span>
+    </div>`
+  ).join('\n');
 
-  let html = templateHtml
-    .replace(/\{\{CATEGORY\}\}/g, data.category)
-    .replace(/\{\{CATEGORY_CLASS\}\}/g, categoryClass)
+  return html
+    .replace(/\{\{LOGO_URL\}\}/g, logoUri)
     .replace(/\{\{DATE\}\}/g, data.date || dayjs().format('YYYY.MM.DD'))
-    .replace(/\{\{TITLE\}\}/g, data.title)
-    .replace(/\{\{SUBTITLE\}\}/g, data.subtitle || '')
+    .replace(/\{\{EDITION\}\}/g, data.edition || '')
+    .replace(/\{\{TITLE\}\}/g, (data.coverTitle || '').replace(/\\n/g, '<br>'))
+    .replace(/\{\{SUBTITLE\}\}/g, data.coverSubtitle || '')
     .replace(/\{\{IMAGE_URL\}\}/g, imageUri)
-    .replace(/\{\{SUMMARY_ITEMS\}\}/g, summaryHtml)
-    .replace(/\{\{PAGE\}\}/g, data.page || '');
-
-  // 하이라이트 처리: **텍스트** → <span class="highlight/accent">텍스트</span>
-  html = html.replace(/\*\*(.*?)\*\*/g, '<span class="highlight">$1</span>');
-
-  return html;
+    .replace(/\{\{PREVIEW_ITEMS\}\}/g, previewItems);
 }
 
 /**
- * HTML을 PNG로 렌더링
+ * 슬라이드 2~4: 콘텐츠
  */
-async function renderToPNG(htmlContent, outputFilename) {
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
+function buildContentHtml(slide, slideIndex, totalSlides, imagePath, date) {
+  const html = fs.readFileSync(path.join(TEMPLATES_DIR, 'slide-content.html'), 'utf-8');
+  const imageUri = imageToDataUri(imagePath) || '';
+  const logoUri = getLogoDataUri();
 
-  try {
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1080, height: 1080 });
-    await page.setContent(htmlContent, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  const keyPointsHtml = (slide.keyPoints || []).map(point =>
+    `<div class="key-point">
+      <span class="key-point-icon">✓</span>
+      <span class="key-point-text">${point}</span>
+    </div>`
+  ).join('\n');
 
-    // 폰트 로딩 대기
-    await page.evaluateHandle('document.fonts.ready');
-    await new Promise(r => setTimeout(r, 1000));
+  let result = html
+    .replace(/\{\{LOGO_URL\}\}/g, logoUri)
+    .replace(/\{\{PAGE\}\}/g, `${slideIndex + 1} / ${totalSlides}`)
+    .replace(/\{\{SLIDE_NUM\}\}/g, String(slideIndex))
+    .replace(/\{\{CATEGORY\}\}/g, slide.category || '')
+    .replace(/\{\{TITLE\}\}/g, (slide.title || '').replace(/\\n/g, '<br>'))
+    .replace(/\{\{BODY\}\}/g, slide.body || '')
+    .replace(/\{\{KEY_POINTS\}\}/g, keyPointsHtml)
+    .replace(/\{\{SOURCE\}\}/g, slide.source || '')
+    .replace(/\{\{DATE\}\}/g, date || dayjs().format('YYYY.MM.DD'))
+    .replace(/\{\{IMAGE_URL\}\}/g, imageUri);
 
-    if (!fs.existsSync(OUTPUT_DIR)) {
-      fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-    }
-
-    const outputPath = path.join(OUTPUT_DIR, outputFilename);
-    await page.screenshot({
-      path: outputPath,
-      type: 'png',
-      clip: { x: 0, y: 0, width: 1080, height: 1080 }
-    });
-
-    console.log(`  ✓ 렌더링 완료: ${outputFilename}`);
-    return outputPath;
-  } finally {
-    await browser.close();
-  }
+  // **텍스트** → 하이라이트
+  result = result.replace(/\*\*(.*?)\*\*/g, '<span class="highlight">$1</span>');
+  return result;
 }
 
 /**
- * 카드뉴스 세트 렌더링 (여러 슬라이드)
+ * 슬라이드 5: CTA
  */
-async function renderCardNewsSet(cardNewsData) {
+function buildCtaHtml(data) {
+  const html = fs.readFileSync(path.join(TEMPLATES_DIR, 'slide-cta.html'), 'utf-8');
+  const logoUri = getLogoDataUri();
+
+  const summaryBoxesHtml = (data.summaryBoxes || []).map(box =>
+    `<div class="summary-box">
+      <div class="summary-box-num">${box.num}</div>
+      <div class="summary-box-label">${box.label}</div>
+    </div>`
+  ).join('\n');
+
+  const hashtags = data.hashtags || ['#황혼매거진', '#시니어뉴스', '#오늘의증시'];
+
+  return html
+    .replace(/\{\{LOGO_URL\}\}/g, logoUri)
+    .replace(/\{\{EDITION\}\}/g, data.edition || '')
+    .replace(/\{\{CTA_MESSAGE\}\}/g, (data.ctaMessage || '').replace(/\\n/g, '<br>'))
+    .replace(/\{\{CTA_BUTTON_TEXT\}\}/g, data.ctaButtonText || '황혼 매거진 팔로우')
+    .replace(/\{\{CTA_SUB\}\}/g, data.ctaSub || '매일 아침, 당신을 위한 뉴스')
+    .replace(/\{\{SUMMARY_BOXES\}\}/g, summaryBoxesHtml)
+    .replace(/\{\{HASHTAG1\}\}/g, hashtags[0] || '')
+    .replace(/\{\{HASHTAG2\}\}/g, hashtags[1] || '')
+    .replace(/\{\{HASHTAG3\}\}/g, hashtags[2] || '');
+}
+
+/**
+ * 5장 카드뉴스 세트 렌더링
+ */
+async function renderCardNewsSet(cardData, images) {
   const results = [];
-  const templateName = cardNewsData.template || 'a';
-  const templatePath = path.join(TEMPLATES_DIR, `template-${templateName}.html`);
-  const templateHtml = fs.readFileSync(templatePath, 'utf-8');
+  const date = dayjs().format('YYYY.MM.DD');
+  const setId = `cardnews_${dayjs().format('YYYYMMDD_HHmm')}`;
+
+  if (!fs.existsSync(OUTPUT_DIR)) {
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  }
 
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -123,35 +132,28 @@ async function renderCardNewsSet(cardNewsData) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 1080 });
 
-    for (let i = 0; i < cardNewsData.slides.length; i++) {
-      const slide = cardNewsData.slides[i];
-      const data = {
-        ...slide,
-        template: templateName,
-        date: cardNewsData.date || dayjs().format('YYYY.MM.DD'),
-        page: `${i + 1} / ${cardNewsData.slides.length}`
-      };
+    const slides = [
+      { name: '커버', html: buildCoverHtml(cardData, images.cover) },
+      ...cardData.slides.map((s, i) => ({
+        name: s.title.replace(/\\n/g, ' '),
+        html: buildContentHtml(s, i + 2, 5, images.slides[i], date)
+      })),
+      { name: 'CTA', html: buildCtaHtml(cardData) }
+    ];
 
-      const html = bindTemplate(templateHtml, data);
-      await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    for (let i = 0; i < slides.length; i++) {
+      const slideType = i === 0 ? 'cover' : i === slides.length - 1 ? 'cta' : 'content';
+      console.log(`  슬라이드 ${i + 1}/5: ${slides[i].name}`);
+
+      await page.setContent(slides[i].html, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await page.evaluateHandle('document.fonts.ready');
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 1000));
 
-      const filename = `${cardNewsData.id}_slide${i + 1}.png`;
+      const filename = `${setId}_${i + 1}_${slideType}.png`;
       const outputPath = path.join(OUTPUT_DIR, filename);
-
-      if (!fs.existsSync(OUTPUT_DIR)) {
-        fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-      }
-
-      await page.screenshot({
-        path: outputPath,
-        type: 'png',
-        clip: { x: 0, y: 0, width: 1080, height: 1080 }
-      });
-
-      console.log(`  ✓ 슬라이드 ${i + 1}/${cardNewsData.slides.length}: ${filename}`);
+      await page.screenshot({ path: outputPath, type: 'png', clip: { x: 0, y: 0, width: 1080, height: 1080 } });
       results.push(outputPath);
+      console.log(`    ✓ ${filename}`);
     }
   } finally {
     await browser.close();
@@ -160,60 +162,4 @@ async function renderCardNewsSet(cardNewsData) {
   return results;
 }
 
-module.exports = { renderToPNG, renderCardNewsSet, bindTemplate, getCategoryClass };
-
-// 직접 실행 테스트
-if (require.main === module) {
-  (async () => {
-    console.log('=== 카드뉴스 렌더링 테스트 ===\n');
-
-    const testData = {
-      id: 'test_001',
-      date: dayjs().format('YYYY.MM.DD'),
-      template: 'a',
-      slides: [
-        {
-          category: '재테크/주식',
-          title: '코스피 6,000 돌파\n개인 투자자 역대 최대 순매수',
-          summaryPoints: [
-            '이달 20일까지 개인 순매수 21.8조 기록',
-            '사상 첫 월간 30조 돌파 가능성',
-            '예금·마통 자금이 증시로 이동 중'
-          ],
-          imageUrl: 'https://img.freepik.com/free-photo/stock-exchange-information-board-graphic_53876-121140.jpg?w=1200&q=90'
-        },
-        {
-          category: '재테크/주식',
-          title: '2026년 ETF 투자\n시니어가 알아야 할 3가지',
-          summaryPoints: [
-            '배당 ETF로 월 수입 만들기',
-            '리스크 낮은 채권 ETF 활용법',
-            '연금저축 계좌와 ETF 조합 전략'
-          ],
-          imageUrl: 'https://img.freepik.com/free-photo/elegant-old-couple-cafe-using-tablet_1157-32977.jpg?w=1200&q=90'
-        }
-      ]
-    };
-
-    // 템플릿 A 테스트
-    console.log('[템플릿 A]');
-    testData.template = 'a';
-    testData.id = 'test_a';
-    await renderCardNewsSet(testData);
-
-    // 템플릿 B 테스트
-    console.log('\n[템플릿 B]');
-    testData.template = 'b';
-    testData.id = 'test_b';
-    await renderCardNewsSet(testData);
-
-    // 템플릿 C 테스트
-    console.log('\n[템플릿 C]');
-    testData.template = 'c';
-    testData.id = 'test_c';
-    await renderCardNewsSet(testData);
-
-    console.log('\n=== 렌더링 테스트 완료 ===');
-    console.log(`결과: ${OUTPUT_DIR}`);
-  })();
-}
+module.exports = { renderCardNewsSet };

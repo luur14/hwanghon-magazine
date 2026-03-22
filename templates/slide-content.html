@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px;
+    height: 1080px;
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+  }
+
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    background: #0D0D0D;
+  }
+
+  .bg-image {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: url('{{IMAGE_URL}}');
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+    opacity: 0.28;
+  }
+
+  .bg-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(
+      160deg,
+      rgba(5, 5, 5, 0.55) 0%,
+      rgba(5, 5, 5, 0.45) 40%,
+      rgba(5, 5, 5, 0.82) 75%,
+      rgba(5, 5, 5, 0.96) 100%
+    );
+    z-index: 2;
+  }
+
+  /* 상단 주황 포인트 라인 */
+  .brand-line {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 6px;
+    background: linear-gradient(90deg, #E8874A 0%, #F5A06A 50%, #E8874A 100%);
+    z-index: 4;
+  }
+
+  .content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* 헤더 — 좌: 브랜드명, 우: 카테고리 뱃지 */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 38px 84px 0;
+    flex-shrink: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brand-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    object-fit: cover;
+  }
+
+  .brand-name {
+    font-size: 31px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.80);
+    letter-spacing: 1px;
+  }
+
+  .category-badge {
+    padding: 10px 28px;
+    border-radius: 24px;
+    font-size: 28px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.90);
+    background: rgba(232, 135, 74, 0.30);
+    border: 1.5px solid rgba(232, 135, 74, 0.50);
+    backdrop-filter: blur(10px);
+  }
+
+  /* 제목 */
+  .title-area {
+    padding: 44px 84px 0;
+    flex-shrink: 0;
+  }
+
+  .news-title {
+    font-size: 78px;
+    font-weight: 400;
+    color: white;
+    line-height: 1.35;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    letter-spacing: -1px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+    margin-bottom: 22px;
+  }
+
+  .divider {
+    width: 60px;
+    height: 5px;
+    background: #E8874A;
+    border-radius: 3px;
+  }
+
+  /* 핵심 포인트 — 고정 위치 */
+  .key-section {
+    position: absolute;
+    bottom: 90px;
+    left: 84px;
+    right: 84px;
+  }
+
+  .key-points {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .key-point {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 28px 34px;
+    background: rgba(255,255,255,0.10);
+    border-radius: 20px;
+    border-left: 7px solid #E8874A;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+  }
+
+  .key-point-icon {
+    color: #E8874A;
+    font-size: 42px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+
+  .key-point-text {
+    font-size: 42px;
+    color: white;
+    line-height: 1.55;
+    font-weight: 600;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.3);
+  }
+
+  .highlight {
+    color: #FFB47A;
+    font-weight: 800;
+  }
+
+  /* 출처 */
+  .source {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 18px 84px 38px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    font-size: 25px;
+    color: rgba(255,255,255,0.40);
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="brand-line"></div>
+  <div class="bg-image"></div>
+  <div class="bg-overlay"></div>
+
+  <div class="content">
+    <div class="header">
+      <div class="brand">
+        <img class="brand-logo" src="{{LOGO_URL}}" alt="황혼 즈음에">
+        <span class="brand-name">황혼 즈음에</span>
+      </div>
+      <div class="category-badge">{{CATEGORY}}</div>
+    </div>
+
+    <div class="title-area">
+      <h2 class="news-title">{{TITLE}}</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="key-section">
+      <div class="key-points">
+        {{KEY_POINTS}}
+      </div>
+    </div>
+
+    <div class="source">
+      <span>출처: {{SOURCE}}</span>
+      <span>{{DATE}}</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -2,4 +2,7 @@ node_modules/
 .env
 output/
 *.png
+!assets/*.png
 freepik-test.png
+.DS_Store
+test-freepik.js

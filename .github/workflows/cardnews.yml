@@ -31,7 +31,9 @@ jobs:
 
       - name: 카드뉴스 파이프라인 실행
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
         run: node src/pipeline.js
 
       - name: 결과물 아티팩트 업로드

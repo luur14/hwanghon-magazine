@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px;
+    height: 1080px;
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+  }
+
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    background: #0D0D0D;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .brand-line {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 6px;
+    background: linear-gradient(90deg, #E8874A 0%, #F5A06A 50%, #E8874A 100%);
+    z-index: 3;
+  }
+
+  .bg-glow {
+    position: absolute;
+    width: 900px; height: 900px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,135,74,0.07) 0%, transparent 65%);
+    top: -300px; right: -250px;
+    z-index: 1;
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 70px 100px 80px;
+    text-align: center;
+  }
+
+  /* 로고 */
+  .brand-logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 26px;
+    object-fit: cover;
+    margin-bottom: 24px;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.35);
+  }
+
+  /* 브랜드명 — 2배 크게 */
+  .brand-name {
+    font-size: 68px;
+    font-weight: 900;
+    color: white;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    line-height: 1.1;
+  }
+
+  /* 서브 태그라인 — 2배 크게 */
+  .brand-sub {
+    font-size: 28px;
+    font-weight: 600;
+    color: #E8874A;
+    letter-spacing: 1px;
+    margin-bottom: 60px;
+  }
+
+  /* 메인 메시지 — 절반 크기 */
+  .main-message {
+    font-size: 30px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.55;
+    margin-bottom: 52px;
+    word-break: keep-all;
+    letter-spacing: -0.3px;
+  }
+
+  .brand-highlight {
+    color: #E8874A;
+    font-weight: 800;
+  }
+
+  /* 앱 다운로드 박스 */
+  .download-boxes {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .download-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 28px 20px;
+    background: rgba(255,255,255,0.07);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+  }
+
+  .download-icon {
+    font-size: 34px;
+    flex-shrink: 0;
+  }
+
+  .download-text {
+    text-align: left;
+  }
+
+  .download-label {
+    font-size: 15px;
+    color: rgba(255,255,255,0.45);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .download-store {
+    font-size: 26px;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 0.3px;
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="brand-line"></div>
+  <div class="bg-glow"></div>
+
+  <div class="content">
+    <img class="brand-logo" src="{{LOGO_URL}}" alt="황혼 즈음에">
+    <div class="brand-name">황혼 즈음에</div>
+    <div class="brand-sub">50대 이상을 위한 이직 · 은퇴 커뮤니티</div>
+
+    <p class="main-message">더 많은 소식을 <span class="brand-highlight">황혼 즈음에</span>에서 만나보세요.</p>
+
+    <div class="download-boxes">
+      <div class="download-box">
+        <span class="download-icon">▶</span>
+        <div class="download-text">
+          <div class="download-label">지금 다운로드</div>
+          <div class="download-store">Google Play</div>
+        </div>
+      </div>
+      <div class="download-box">
+        <span class="download-icon"></span>
+        <div class="download-text">
+          <div class="download-label">지금 다운로드</div>
+          <div class="download-store">App Store</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

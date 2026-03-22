@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px;
+    height: 1080px;
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+  }
+
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    background: #0D0D0D;
+  }
+
+  .bg-image {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: url('{{IMAGE_URL}}');
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+    opacity: 0.25;
+  }
+
+  .bg-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(
+      180deg,
+      rgba(5, 5, 5, 0.35) 0%,
+      rgba(5, 5, 5, 0.25) 30%,
+      rgba(5, 5, 5, 0.75) 65%,
+      rgba(5, 5, 5, 0.97) 100%
+    );
+    z-index: 2;
+  }
+
+  .brand-line {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 6px;
+    background: linear-gradient(90deg, #E8874A 0%, #F5A06A 50%, #E8874A 100%);
+    z-index: 3;
+  }
+
+  .content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 60px 84px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brand-logo {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    object-fit: cover;
+  }
+
+  .brand-name {
+    font-size: 36px;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 1px;
+  }
+
+  .date {
+    font-size: 31px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 500;
+  }
+
+  .edition-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 30px;
+    background: rgba(255,255,255,0.18);
+    border: 1.5px solid rgba(255,255,255,0.35);
+    border-radius: 30px;
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    width: fit-content;
+    margin-bottom: 28px;
+    letter-spacing: 1px;
+    backdrop-filter: blur(6px);
+  }
+
+  .title-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 60px;
+  }
+
+  .title {
+    font-size: 100px;
+    font-weight: 400;
+    color: white;
+    line-height: 1.30;
+    margin-bottom: 28px;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    letter-spacing: -2px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.4);
+  }
+
+  .subtitle {
+    font-size: 45px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.70);
+    line-height: 1.70;
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="brand-line"></div>
+  <div class="bg-image"></div>
+  <div class="bg-overlay"></div>
+  <div class="content">
+    <div class="header">
+      <div class="brand">
+        <img class="brand-logo" src="{{LOGO_URL}}" alt="황혼 즈음에">
+        <span class="brand-name">황혼 즈음에</span>
+      </div>
+      <span class="date">{{DATE}}</span>
+    </div>
+
+    <div class="title-area">
+      <div class="edition-tag">{{EDITION}}</div>
+      <h1 class="title">{{TITLE}}</h1>
+      <p class="subtitle">{{SUBTITLE}}</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
