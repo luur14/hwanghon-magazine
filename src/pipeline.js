@@ -9,6 +9,12 @@ const { renderCardNewsSet } = require('./renderers/card-renderer');
 
 const OUTPUT_DIR = path.join(__dirname, '../output');
 
+// output 디렉토리 자동 생성
+for (const dir of ['output', 'output/cardnews', 'output/images']) {
+  const d = path.join(__dirname, '..', dir);
+  if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+}
+
 /**
  * 전체 카드뉴스 생성 파이프라인
  */
