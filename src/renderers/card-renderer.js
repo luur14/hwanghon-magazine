@@ -112,7 +112,7 @@ function buildCtaHtml(data) {
 }
 
 /**
- * 5장 카드뉴스 세트 렌더링
+ * 7장 카드뉴스 세트 렌더링 (커버1 + 콘텐츠5 + CTA1)
  */
 async function renderCardNewsSet(cardData, images) {
   const results = [];
@@ -132,18 +132,19 @@ async function renderCardNewsSet(cardData, images) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 1080 });
 
+    const totalSlides = cardData.slides.length + 2; // 커버 + 콘텐츠 + CTA
     const slides = [
       { name: '커버', html: buildCoverHtml(cardData, images.cover) },
       ...cardData.slides.map((s, i) => ({
         name: s.title.replace(/\\n/g, ' '),
-        html: buildContentHtml(s, i + 2, 5, images.slides[i], date)
+        html: buildContentHtml(s, i + 2, totalSlides, images.slides[i], date)
       })),
       { name: 'CTA', html: buildCtaHtml(cardData) }
     ];
 
     for (let i = 0; i < slides.length; i++) {
       const slideType = i === 0 ? 'cover' : i === slides.length - 1 ? 'cta' : 'content';
-      console.log(`  슬라이드 ${i + 1}/5: ${slides[i].name}`);
+      console.log(`  슬라이드 ${i + 1}/${slides.length}: ${slides[i].name}`);
 
       await page.setContent(slides[i].html, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await page.evaluateHandle('document.fonts.ready');

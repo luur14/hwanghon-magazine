@@ -45,7 +45,7 @@ async function runPipeline() {
       'utf-8'
     );
 
-    // ━━━ 3단계: 이미지 수집 (커버1 + 콘텐츠3) ━━━
+    // ━━━ 3단계: 이미지 수집 (커버1 + 콘텐츠5) ━━━
     console.log('\n━━━ [3/4] 이미지 수집 ━━━');
 
     // 커버 키워드: 첫 번째 슬라이드 키워드를 공유하거나 커버 카테고리 기반
@@ -64,8 +64,8 @@ async function runPipeline() {
       slides: cardData.slides.map((_, i) => imageResults[i + 1]?.imagePath || null)
     };
 
-    // ━━━ 4단계: PNG 렌더링 (5장) ━━━
-    console.log('\n━━━ [4/4] 카드뉴스 PNG 렌더링 (5장) ━━━');
+    // ━━━ 4단계: PNG 렌더링 (7장) ━━━
+    console.log('\n━━━ [4/4] 카드뉴스 PNG 렌더링 (7장) ━━━');
     const renderedFiles = await renderCardNewsSet(cardData, images);
 
     // ━━━ 결과 요약 ━━━
