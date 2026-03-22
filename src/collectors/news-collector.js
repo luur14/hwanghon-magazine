@@ -2,6 +2,10 @@ const RssParser = require('rss-parser');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+dayjs.extend(utc);
+dayjs.extend(timezone);
 const fs = require('fs');
 const path = require('path');
 
@@ -21,8 +25,9 @@ const sources = require('../../config/sources.json');
  * - 저녁 8시 (18:00~05:59): 최신뉴스 고정
  */
 function getTodayTheme() {
-  const hour = dayjs().hour();
-  const dayIndex = dayjs().diff(dayjs('2026-01-01'), 'day');
+  const kst = dayjs().tz('Asia/Seoul');
+  const hour = kst.hour();
+  const dayIndex = kst.diff(dayjs('2026-01-01'), 'day');
 
   if (hour >= 6 && hour < 12) {
     return '주식';
