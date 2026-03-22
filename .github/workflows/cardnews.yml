@@ -2,10 +2,12 @@ name: 카드뉴스 자동 생성
 
 on:
   schedule:
-    # 한국시간 05:00 (UTC 20:00 전날)
-    - cron: '0 20 * * *'
-    # 한국시간 18:00 (UTC 09:00)
-    - cron: '0 9 * * *'
+    # 아침 8시 KST (UTC 23:00 전날) — 주식
+    - cron: '0 23 * * *'
+    # 낮 2시 KST (UTC 05:00) — 재테크/건강 격일
+    - cron: '0 5 * * *'
+    # 저녁 8시 KST (UTC 11:00) — 최신뉴스
+    - cron: '0 11 * * *'
   workflow_dispatch:  # 수동 실행 가능
 
 jobs:
@@ -34,6 +36,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: node src/pipeline.js
 
       - name: 결과물 아티팩트 업로드

@@ -1,41 +1,48 @@
 {
-  "news": {
-    "finance": [
-      {
-        "name": "한국경제 증권",
-        "url": "https://www.hankyung.com/feed/stock",
-        "category": "재테크/주식"
-      },
-      {
-        "name": "매일경제 증권",
-        "url": "https://www.mk.co.kr/rss/50200011/",
-        "category": "재테크/주식"
-      },
-      {
-        "name": "연합뉴스 경제",
-        "url": "https://www.yna.co.kr/rss/economy.xml",
-        "category": "재테크/주식"
-      }
-    ],
-    "policy": [
-      {
-        "name": "정책브리핑",
-        "url": "https://www.korea.kr/rss/policy.xml",
-        "category": "정책"
-      },
-      {
-        "name": "기획재정부",
-        "url": "https://www.moef.go.kr/rss/policy.xml",
-        "category": "정책"
-      }
-    ],
-    "health": [
-      {
-        "name": "연합뉴스 건강",
-        "url": "https://www.yna.co.kr/rss/health.xml",
-        "category": "건강"
-      }
-    ]
+  "themes": {
+    "주식": {
+      "label": "주식",
+      "description": "증시 동향, 산업 트렌드, 투자 소식",
+      "sources": [
+        { "name": "한국경제 증권", "url": "https://www.hankyung.com/feed/stock", "category": "주식" },
+        { "name": "매일경제 증권", "url": "https://www.mk.co.kr/rss/50200011/", "category": "주식" },
+        { "name": "연합뉴스 경제", "url": "https://www.yna.co.kr/rss/economy.xml", "category": "주식" },
+        { "name": "연합뉴스 금융", "url": "https://www.yna.co.kr/rss/finance.xml", "category": "주식" },
+        { "name": "한국경제 금융", "url": "https://www.hankyung.com/feed/finance", "category": "주식" }
+      ]
+    },
+    "재테크": {
+      "label": "재테크",
+      "description": "절약, 자산관리, 부동산, 재무설계",
+      "sources": [
+        { "name": "한국경제 재테크", "url": "https://www.hankyung.com/feed/realestate", "category": "재테크" },
+        { "name": "매일경제 재테크", "url": "https://www.mk.co.kr/rss/50300009/", "category": "재테크" },
+        { "name": "연합뉴스 경제", "url": "https://www.yna.co.kr/rss/economy.xml", "category": "재테크" },
+        { "name": "한국경제 증권", "url": "https://www.hankyung.com/feed/stock", "category": "재테크" },
+        { "name": "기획재정부", "url": "https://www.moef.go.kr/rss/policy.xml", "category": "재테크" }
+      ]
+    },
+    "건강": {
+      "label": "건강",
+      "description": "시니어 건강, 운동, 식단, 의료 정보",
+      "sources": [
+        { "name": "연합뉴스 건강", "url": "https://www.yna.co.kr/rss/health.xml", "category": "건강" },
+        { "name": "연합뉴스 사회", "url": "https://www.yna.co.kr/rss/society.xml", "category": "건강" },
+        { "name": "한겨레 건강", "url": "https://www.hani.co.kr/rss/health/", "category": "건강" },
+        { "name": "정책브리핑 복지", "url": "https://www.korea.kr/rss/policy.xml", "category": "건강" }
+      ]
+    },
+    "최신뉴스": {
+      "label": "최신뉴스",
+      "description": "정치, 사회, 국제 이슈, 화제 소식",
+      "sources": [
+        { "name": "연합뉴스 정치", "url": "https://www.yna.co.kr/rss/politics.xml", "category": "최신뉴스" },
+        { "name": "연합뉴스 사회", "url": "https://www.yna.co.kr/rss/society.xml", "category": "최신뉴스" },
+        { "name": "연합뉴스 국제", "url": "https://www.yna.co.kr/rss/international.xml", "category": "최신뉴스" },
+        { "name": "한국경제 정치", "url": "https://www.hankyung.com/feed/politics", "category": "최신뉴스" },
+        { "name": "매일경제 사회", "url": "https://www.mk.co.kr/rss/30000001/", "category": "최신뉴스" }
+      ]
+    }
   },
   "stock": {
     "domestic": {

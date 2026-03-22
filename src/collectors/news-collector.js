@@ -15,25 +15,38 @@ const parser = new RssParser({
 const sources = require('../../config/sources.json');
 
 /**
- * RSS 피드에서 뉴스 수집
+ * 시간대별 테마 결정
+ * - 아침 8시 (06:00~11:59): 주식 고정
+ * - 낮 2시  (12:00~17:59): 재테크 / 건강 격일 교대
+ * - 저녁 8시 (18:00~05:59): 최신뉴스 고정
  */
-async function collectRSSNews() {
-  const allNews = [];
-  const allFeeds = [
-    ...sources.news.finance,
-    ...sources.news.policy,
-    ...sources.news.health
-  ];
+function getTodayTheme() {
+  const hour = dayjs().hour();
+  const dayIndex = dayjs().diff(dayjs('2026-01-01'), 'day');
 
-  for (const source of allFeeds) {
+  if (hour >= 6 && hour < 12) {
+    return '주식';
+  } else if (hour >= 12 && hour < 18) {
+    return dayIndex % 2 === 0 ? '재테크' : '건강';
+  } else {
+    return '최신뉴스';
+  }
+}
+
+/**
+ * 특정 테마의 RSS 피드에서 뉴스 수집
+ */
+async function collectRSSNews(theme) {
+  const allNews = [];
+  const themeSources = sources.themes[theme]?.sources || [];
+
+  for (const source of themeSources) {
     try {
       console.log(`  수집 중: ${source.name}...`);
       const feed = await parser.parseURL(source.url);
-      const today = dayjs().format('YYYY-MM-DD');
 
       const articles = feed.items
         .filter(item => {
-          // 오늘 날짜 또는 최근 24시간 이내 기사
           const pubDate = dayjs(item.pubDate || item.isoDate);
           return dayjs().diff(pubDate, 'hour') <= 24;
         })
@@ -45,7 +58,7 @@ async function collectRSSNews() {
           source: source.name,
           category: source.category
         }))
-        .slice(0, 5); // 소스당 최대 5개
+        .slice(0, 5);
 
       allNews.push(...articles);
       console.log(`    → ${articles.length}건 수집`);
@@ -66,9 +79,7 @@ async function collectDomesticStock() {
   for (const [name, url] of Object.entries(sources.stock.domestic)) {
     try {
       const { data } = await axios.get(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-        }
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
       });
       const $ = cheerio.load(data);
 
@@ -100,9 +111,7 @@ async function collectInternationalStock() {
   for (const [name, url] of Object.entries(sources.stock.international)) {
     try {
       const { data } = await axios.get(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-        }
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
       });
 
       const result = data.chart?.result?.[0];
@@ -130,48 +139,35 @@ async function collectInternationalStock() {
 }
 
 /**
- * 시니어 키워드 관련 뉴스 필터링
- */
-function filterSeniorRelevant(news) {
-  const keywords = [...sources.keywords.senior, ...sources.keywords.finance];
-
-  return news.filter(article => {
-    const text = `${article.title} ${article.summary}`.toLowerCase();
-    return keywords.some(kw => text.includes(kw.toLowerCase()));
-  });
-}
-
-/**
  * 전체 수집 실행
  */
 async function collectAll() {
-  console.log('=== 뉴스 & 증시 수집 시작 ===');
-  console.log(`시간: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n`);
+  const theme = getTodayTheme();
+  const themeInfo = sources.themes[theme];
 
-  // 1. RSS 뉴스 수집
-  console.log('[1/3] RSS 뉴스 수집...');
-  const rawNews = await collectRSSNews();
+  console.log('=== 뉴스 & 증시 수집 시작 ===');
+  console.log(`시간: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`);
+  console.log(`오늘의 테마: 【${theme}】 — ${themeInfo.description}\n`);
+
+  // 1. 테마 RSS 뉴스 수집
+  console.log(`[1/3] ${theme} 뉴스 수집...`);
+  const rawNews = await collectRSSNews(theme);
   console.log(`  총 ${rawNews.length}건 수집\n`);
 
-  // 2. 시니어 관련 필터링
-  const filteredNews = filterSeniorRelevant(rawNews);
-  console.log(`[필터링] 시니어 관련: ${filteredNews.length}건\n`);
+  // 중복 제거 (링크 기준)
+  const finalNews = [...new Map(rawNews.map(n => [n.link, n])).values()];
 
-  // 필터링 안 된 것도 포함 (재테크 카테고리는 전부)
-  const financeNews = rawNews.filter(n => n.category === '재테크/주식');
-  const policyNews = filteredNews.filter(n => n.category !== '재테크/주식');
-  const finalNews = [...new Map([...financeNews, ...policyNews].map(n => [n.link, n])).values()];
-
-  // 3. 증시 데이터 수집
+  // 2. 증시 데이터 수집
   console.log('[2/3] 국내 증시 수집...');
   const domesticStock = await collectDomesticStock();
 
   console.log('\n[3/3] 해외 증시 수집...');
   const internationalStock = await collectInternationalStock();
 
-  // 결과 저장
   const result = {
     collectedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+    theme,
+    themeDescription: themeInfo.description,
     news: finalNews,
     stock: {
       domestic: domesticStock,
@@ -179,25 +175,20 @@ async function collectAll() {
     },
     stats: {
       totalRaw: rawNews.length,
-      totalFiltered: finalNews.length,
-      byCategory: {
-        finance: financeNews.length,
-        policy: policyNews.length
-      }
+      totalFiltered: finalNews.length
     }
   };
 
   const outputPath = path.join(__dirname, '../../output/news.json');
   fs.writeFileSync(outputPath, JSON.stringify(result, null, 2), 'utf-8');
   console.log(`\n=== 수집 완료 → ${outputPath} ===`);
-  console.log(`뉴스 ${finalNews.length}건, 증시 국내 ${Object.keys(domesticStock).length}개 + 해외 ${Object.keys(internationalStock).length}개\n`);
+  console.log(`테마: ${theme} | 뉴스 ${finalNews.length}건 | 증시 국내 ${Object.keys(domesticStock).length}개 + 해외 ${Object.keys(internationalStock).length}개\n`);
 
   return result;
 }
 
-module.exports = { collectAll, collectRSSNews, collectDomesticStock, collectInternationalStock };
+module.exports = { collectAll, collectRSSNews, collectDomesticStock, collectInternationalStock, getTodayTheme };
 
-// 직접 실행
 if (require.main === module) {
   collectAll().catch(console.error);
 }
