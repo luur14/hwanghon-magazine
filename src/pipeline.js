@@ -7,6 +7,7 @@ const { collectAll } = require('./collectors/news-collector');
 const { collectImagesForNews } = require('./collectors/image-collector');
 const { generateCardNewsText } = require('./generators/text-generator');
 const { renderCardNewsSet } = require('./renderers/card-renderer');
+const { publishAll } = require('./publishers/index');
 
 const OUTPUT_DIR = path.join(__dirname, '../output');
 
@@ -65,8 +66,11 @@ async function runPipeline() {
     };
 
     // ━━━ 4단계: PNG 렌더링 (7장) ━━━
-    console.log('\n━━━ [4/4] 카드뉴스 PNG 렌더링 (7장) ━━━');
+    console.log('\n━━━ [4/5] 카드뉴스 PNG 렌더링 (7장) ━━━');
     const renderedFiles = await renderCardNewsSet(cardData, images);
+
+    // ━━━ 5단계: SNS 게시 ━━━
+    const publishResults = await publishAll(renderedFiles, cardData);
 
     // ━━━ 결과 요약 ━━━
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -84,7 +88,8 @@ async function runPipeline() {
       generatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       edition: cardData.edition,
       elapsedSeconds: parseFloat(elapsed),
-      slides: renderedFiles.map(f => path.basename(f))
+      slides: renderedFiles.map(f => path.basename(f)),
+      published: publishResults
     };
 
     fs.writeFileSync(

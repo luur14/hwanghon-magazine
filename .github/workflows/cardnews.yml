@@ -1,4 +1,4 @@
-name: 카드뉴스 자동 생성
+name: 카드뉴스 자동 생성 & SNS 게시
 
 on:
   schedule:
@@ -11,9 +11,9 @@ on:
   workflow_dispatch:  # 수동 실행 가능
 
 jobs:
-  generate-cardnews:
+  generate-and-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: 코드 체크아웃
@@ -31,12 +31,28 @@ jobs:
       - name: Puppeteer 브라우저 설치
         run: npx puppeteer browsers install chrome
 
-      - name: 카드뉴스 파이프라인 실행
+      - name: 카드뉴스 파이프라인 실행 (생성 + SNS 게시)
         env:
+          # AI 생성
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          # 이미지 수집
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          # 이미지 호스팅 (Instagram/Facebook용 공개 URL)
+          IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
+          # Instagram
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          # Facebook
+          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          FACEBOOK_PAGE_ACCESS_TOKEN: ${{ secrets.FACEBOOK_PAGE_ACCESS_TOKEN }}
+          # Band
+          BAND_ACCESS_TOKEN: ${{ secrets.BAND_ACCESS_TOKEN }}
+          BAND_KEY: ${{ secrets.BAND_KEY }}
+          # Telegram (카카오 대체)
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: node src/pipeline.js
 
       - name: 결과물 아티팩트 업로드
@@ -45,6 +61,3 @@ jobs:
           name: cardnews-${{ github.run_number }}
           path: output/cardnews/*.png
           retention-days: 7
-
-      # TODO: 텔레그램 알림 추가
-      # TODO: 5개 채널 배포 추가
