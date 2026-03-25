@@ -54,7 +54,7 @@ async function runPipeline() {
 
     const imageItems = [
       { title: cardData.coverTitle.replace(/\\n/g, ' '), category: cardData.coverCategory, imageKeyword: coverKeyword },
-      ...cardData.slides.map(s => ({ title: s.title, category: s.category, imageKeyword: s.imageKeyword }))
+      ...cardData.slides.map(s => ({ title: s.title, category: s.category, imageKeyword: s.imageKeyword, imageKeywordKo: s.imageKeywordKo }))
     ];
 
     const imageResults = await collectImagesForNews(imageItems);

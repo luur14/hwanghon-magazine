@@ -5,6 +5,8 @@ const path = require('path');
 const OUTPUT_DIR = path.join(__dirname, '../../output/images');
 const PEXELS_API_KEY = process.env.PEXELS_API_KEY || '';
 const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY || '';
+const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID || '';
+const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET || '';
 
 // 카테고리별 기본 Pexels 검색어
 const CATEGORY_FALLBACK = {
@@ -25,6 +27,35 @@ function resolveKeyword(rawKeyword, category) {
   // 영어 단어 포함되어 있으면 그대로 사용
   if (/[a-zA-Z]/.test(kw) && kw.length > 3) return kw;
   return CATEGORY_FALLBACK[category] || 'business news';
+}
+
+/**
+ * 네이버 이미지 검색 API — 한국어 키워드 전용 (1순위)
+ * 이재명 대통령, 코스피 주식 등 한국 뉴스 이미지에 최적화
+ */
+async function searchNaver(keyword) {
+  if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET || !keyword) return null;
+
+  try {
+    const res = await axios.get('https://openapi.naver.com/v1/search/image', {
+      params: { query: keyword, display: 5, sort: 'sim', filter: 'large' },
+      headers: {
+        'X-Naver-Client-Id': NAVER_CLIENT_ID,
+        'X-Naver-Client-Secret': NAVER_CLIENT_SECRET
+      },
+      timeout: 10000
+    });
+    const items = res.data.items || [];
+    if (items.length > 0) {
+      console.log(`    → 네이버 "${keyword}" → ${items.length}건`);
+      return items[0].link; // 원본 이미지 URL
+    }
+    console.log(`    → 네이버 "${keyword}" 결과 없음`);
+    return null;
+  } catch (err) {
+    console.warn(`    ⚠ 네이버 오류: ${err.message}`);
+    return null;
+  }
 }
 
 /**
@@ -148,19 +179,29 @@ async function collectImagesForNews(items) {
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
     const keyword = resolveKeyword(item.imageKeyword || item.title, item.category);
+    const keywordKo = (item.imageKeywordKo || '').trim();
     const filename = `news_${i + 1}_${Date.now()}.jpg`;
 
     console.log(`[${i + 1}/${items.length}] "${item.title || keyword}"`);
-    console.log(`  키워드: ${keyword}`);
+    if (keywordKo) console.log(`  한국어 키워드: ${keywordKo}`);
+    console.log(`  영어 키워드: ${keyword}`);
 
     let url = null;
     let source = 'none';
 
-    // 1순위: Pexels
-    url = await searchPexels(keyword);
-    if (url) source = 'pexels';
+    // 1순위: 네이버 이미지 (한국어 키워드 — 인물/뉴스에 강함)
+    if (keywordKo) {
+      url = await searchNaver(keywordKo);
+      if (url) source = 'naver';
+    }
 
-    // 2순위: Unsplash
+    // 2순위: Pexels (영어 키워드)
+    if (!url) {
+      url = await searchPexels(keyword);
+      if (url) source = 'pexels';
+    }
+
+    // 3순위: Unsplash
     if (!url) {
       url = await searchUnsplash(keyword);
       if (url) source = 'unsplash';
@@ -185,7 +226,7 @@ async function collectImagesForNews(items) {
   return results;
 }
 
-module.exports = { collectImagesForNews, downloadImage, resolveKeyword };
+module.exports = { collectImagesForNews, downloadImage, resolveKeyword, searchNaver };
 
 // 직접 실행 테스트
 if (require.main === module) {
