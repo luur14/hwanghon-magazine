@@ -57,7 +57,7 @@ async function generateComments(postTitle, postContent, nicknames) {
     try {
       const { GoogleGenerativeAI } = require('@google/generative-ai');
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const result = await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: COMMENT_PROMPT + '\n\n' + userMsg }] }],
         generationConfig: { temperature: 0.9, maxOutputTokens: 512, responseMimeType: 'application/json' },

@@ -71,7 +71,7 @@ async function generateWithGemini(newsContext, commentNicknames) {
 
   const { GoogleGenerativeAI } = require('@google/generative-ai');
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   const userPrompt = `뉴스 주제: ${newsContext}\n\n댓글 작성자 닉네임: ${commentNicknames.join(', ')}`;
 
