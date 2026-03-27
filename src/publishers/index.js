@@ -7,6 +7,7 @@ const { publishInstagram } = require('./instagram-publisher');
 const { publishFacebook } = require('./facebook-publisher');
 const { publishBand } = require('./band-publisher');
 const { publishTelegram } = require('./telegram-publisher');
+const { publishToSupabase } = require('./supabase-publisher');
 
 /**
  * 카드뉴스용 캡션/내용 생성
@@ -103,9 +104,12 @@ async function publishAll(imagePaths, cardData) {
   // Telegram (직접 파일 업로드)
   results.telegram = await publishTelegram(imagePaths, htmlCaption);
 
+  // Supabase (앱 내 커뮤니티 게시글 자동 등록)
+  results.supabase = await publishToSupabase(cardData);
+
   // 결과 요약
   console.log('\n  게시 결과:');
-  const platforms = ['instagram', 'facebook', 'band', 'telegram'];
+  const platforms = ['instagram', 'facebook', 'band', 'telegram', 'supabase'];
   for (const p of platforms) {
     const status = results[p] ? '✅' : '⏭';
     console.log(`    ${status} ${p}`);

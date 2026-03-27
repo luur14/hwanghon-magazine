@@ -20,6 +20,7 @@
   "homepage": "https://github.com/luur14/hwanghon-magazine#readme",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.100.1",
     "axios": "^1.13.6",
     "cheerio": "^1.2.0",
     "dayjs": "^1.11.20",
