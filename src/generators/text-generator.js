@@ -14,6 +14,11 @@ if (fs.existsSync(envPath)) {
   });
 }
 
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const SYSTEM_PROMPT = `당신은 "황혼 매거진"의 수석 카드뉴스 에디터입니다. 50~60대 시니어를 위한 경제·생활 뉴스 매거진을 만듭니다.
 
 역할:
@@ -118,8 +123,12 @@ async function generateCardNewsText(newsData) {
     }
   }
 
-  const hour = dayjs().hour();
-  const timeLabel = hour < 12 ? '오전 브리핑' : '오후 브리핑';
+  const kst = dayjs().tz('Asia/Seoul');
+  const hour = kst.hour();
+  const timeLabel =
+    hour >= 6 && hour < 12  ? '아침 브리핑' :
+    hour >= 12 && hour < 18 ? '낮 에디션' :
+                               '저녁 브리핑';
 
   const theme = newsData.theme || '주식';
   const themeDesc = newsData.themeDescription || '';

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px;
+    height: 1080px;
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+  }
+
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    background: {{BG_COLOR}};
+  }
+
+  .bg-image {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: url('{{IMAGE_URL}}');
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+    opacity: 0.18;
+  }
+
+  .bg-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(
+      180deg,
+      rgba(0,0,0,0.10) 0%,
+      rgba(0,0,0,0.05) 30%,
+      rgba(0,0,0,0.55) 65%,
+      rgba(0,0,0,0.90) 100%
+    );
+    z-index: 2;
+  }
+
+  /* 상단 강조선 — 악센트 컬러 */
+  .brand-line {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 6px;
+    background: linear-gradient(90deg, {{ACCENT_COLOR}} 0%, {{ACCENT_LIGHT}} 50%, {{ACCENT_COLOR}} 100%);
+    z-index: 3;
+  }
+
+  /* 좌측 세로 장식선 */
+  .side-accent {
+    position: absolute;
+    left: 0; top: 0;
+    width: 8px; height: 100%;
+    background: linear-gradient(180deg, {{ACCENT_COLOR}} 0%, transparent 100%);
+    z-index: 3;
+    opacity: 0.6;
+  }
+
+  .content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 60px 84px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brand-logo {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    object-fit: cover;
+  }
+
+  .brand-name {
+    font-size: 36px;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 1px;
+  }
+
+  .date {
+    font-size: 31px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 500;
+  }
+
+  /* 에디션 태그 — 악센트 컬러 */
+  .edition-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 30px;
+    background: {{ACCENT_COLOR}}33;
+    border: 1.5px solid {{ACCENT_COLOR}}99;
+    border-radius: 30px;
+    font-size: 28px;
+    font-weight: 700;
+    color: {{ACCENT_COLOR}};
+    width: fit-content;
+    margin-bottom: 28px;
+    letter-spacing: 1px;
+  }
+
+  .title-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 60px;
+  }
+
+  .title {
+    font-size: 100px;
+    font-weight: 400;
+    color: white;
+    line-height: 1.30;
+    margin-bottom: 28px;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    letter-spacing: -2px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  }
+
+  /* 구분선 — 악센트 컬러 */
+  .title-divider {
+    width: 80px;
+    height: 4px;
+    background: {{ACCENT_COLOR}};
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+
+  .subtitle {
+    font-size: 45px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.70);
+    line-height: 1.70;
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="brand-line"></div>
+  <div class="side-accent"></div>
+  <div class="bg-image"></div>
+  <div class="bg-overlay"></div>
+  <div class="content">
+    <div class="header">
+      <div class="brand">
+        <img class="brand-logo" src="{{LOGO_URL}}" alt="황혼 즈음에">
+        <span class="brand-name">황혼 즈음에</span>
+      </div>
+      <span class="date">{{DATE}}</span>
+    </div>
+
+    <div class="title-area">
+      <div class="edition-tag">{{EDITION}}</div>
+      <div class="title-divider"></div>
+      <h1 class="title">{{TITLE}}</h1>
+      <p class="subtitle">{{SUBTITLE}}</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

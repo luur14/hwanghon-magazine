@@ -7,6 +7,12 @@ const TEMPLATES_DIR = path.join(__dirname, '../../templates');
 const OUTPUT_DIR = path.join(__dirname, '../../output/cardnews');
 const LOGO_PATH = path.join(__dirname, '../../assets/logo.png');
 
+// 낮 에디션 테마별 색상
+const DAY_THEME_COLORS = {
+  '재테크': { bg: '#0F1C2E', accent: '#D4AF37', accentLight: '#E8C96A' },
+  '건강':   { bg: '#0D2B1A', accent: '#7EC845', accentLight: '#A5E070' }
+};
+
 /**
  * 로고를 base64 data URI로 변환
  */
@@ -27,10 +33,19 @@ function imageToDataUri(imagePath) {
 }
 
 /**
+ * 테마에 따라 낮 에디션 여부 및 색상 반환
+ */
+function getDayTheme(theme) {
+  return DAY_THEME_COLORS[theme] || null;
+}
+
+/**
  * 슬라이드 1: 커버
  */
 function buildCoverHtml(data, coverImagePath) {
-  const html = fs.readFileSync(path.join(TEMPLATES_DIR, 'slide-cover.html'), 'utf-8');
+  const dayTheme = getDayTheme(data.coverCategory);
+  const templateFile = dayTheme ? 'slide-cover-day.html' : 'slide-cover.html';
+  const html = fs.readFileSync(path.join(TEMPLATES_DIR, templateFile), 'utf-8');
   const logoUri = getLogoDataUri();
   const imageUri = imageToDataUri(coverImagePath) || '';
 
@@ -41,7 +56,7 @@ function buildCoverHtml(data, coverImagePath) {
     </div>`
   ).join('\n');
 
-  return html
+  let result = html
     .replace(/\{\{LOGO_URL\}\}/g, logoUri)
     .replace(/\{\{DATE\}\}/g, data.date || dayjs().format('YYYY.MM.DD'))
     .replace(/\{\{EDITION\}\}/g, data.edition || '')
@@ -49,13 +64,22 @@ function buildCoverHtml(data, coverImagePath) {
     .replace(/\{\{SUBTITLE\}\}/g, data.coverSubtitle || '')
     .replace(/\{\{IMAGE_URL\}\}/g, imageUri)
     .replace(/\{\{PREVIEW_ITEMS\}\}/g, previewItems);
+
+  if (dayTheme) {
+    result = result
+      .replace(/\{\{BG_COLOR\}\}/g, dayTheme.bg)
+      .replace(/\{\{ACCENT_COLOR\}\}/g, dayTheme.accent)
+      .replace(/\{\{ACCENT_LIGHT\}\}/g, dayTheme.accentLight);
+  }
+  return result;
 }
 
 /**
- * 슬라이드 2~4: 콘텐츠
+ * 슬라이드 2~6: 콘텐츠
  */
-function buildContentHtml(slide, slideIndex, totalSlides, imagePath, date) {
-  const html = fs.readFileSync(path.join(TEMPLATES_DIR, 'slide-content.html'), 'utf-8');
+function buildContentHtml(slide, slideIndex, totalSlides, imagePath, date, dayTheme) {
+  const templateFile = dayTheme ? 'slide-content-day.html' : 'slide-content.html';
+  const html = fs.readFileSync(path.join(TEMPLATES_DIR, templateFile), 'utf-8');
   const imageUri = imageToDataUri(imagePath) || '';
   const logoUri = getLogoDataUri();
 
@@ -80,6 +104,13 @@ function buildContentHtml(slide, slideIndex, totalSlides, imagePath, date) {
 
   // **텍스트** → 하이라이트
   result = result.replace(/\*\*(.*?)\*\*/g, '<span class="highlight">$1</span>');
+
+  if (dayTheme) {
+    result = result
+      .replace(/\{\{BG_COLOR\}\}/g, dayTheme.bg)
+      .replace(/\{\{ACCENT_COLOR\}\}/g, dayTheme.accent)
+      .replace(/\{\{ACCENT_LIGHT\}\}/g, dayTheme.accentLight);
+  }
   return result;
 }
 
@@ -133,11 +164,16 @@ async function renderCardNewsSet(cardData, images) {
     await page.setViewport({ width: 1080, height: 1080 });
 
     const totalSlides = cardData.slides.length + 2; // 커버 + 콘텐츠 + CTA
+    const dayTheme = getDayTheme(cardData.coverCategory);
+    if (dayTheme) {
+      console.log(`  🎨 낮 에디션 템플릿 적용: ${cardData.coverCategory} (${dayTheme.accent})`);
+    }
+
     const slides = [
       { name: '커버', html: buildCoverHtml(cardData, images.cover) },
       ...cardData.slides.map((s, i) => ({
         name: s.title.replace(/\\n/g, ' '),
-        html: buildContentHtml(s, i + 2, totalSlides, images.slides[i], date)
+        html: buildContentHtml(s, i + 2, totalSlides, images.slides[i], date, dayTheme)
       })),
       { name: 'CTA', html: buildCtaHtml(cardData) }
     ];
