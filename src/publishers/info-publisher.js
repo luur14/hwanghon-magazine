@@ -85,6 +85,7 @@ async function publishToInfo(imagePaths, cardData) {
   const title = (cardData.coverTitle || '').replace(/\\n/g, ' ').replace(/\n/g, ' ').trim();
   const summary = cardData.coverSubtitle || cardData.edition || '';
   const tags = buildTags(cardData);
+  const content = buildContent(cardData);
 
   const { data, error } = await supabase
     .from('info_articles')
@@ -92,7 +93,7 @@ async function publishToInfo(imagePaths, cardData) {
       category_id: 'cardnews',
       title,
       summary,
-      content: '',
+      content,
       slides,
       tags,
       is_published: true,
@@ -108,6 +109,42 @@ async function publishToInfo(imagePaths, cardData) {
 
   console.log(`  ✅ Info 등록 완료: "${title.slice(0, 30)}..." (${slides.length}장)`);
   return { articleId: data.id, slideCount: slides.length };
+}
+
+/**
+ * 카드뉴스 슬라이드 데이터를 마크다운 본문으로 변환
+ */
+function buildContent(cardData) {
+  const lines = [];
+
+  for (const slide of (cardData.slides || [])) {
+    if (slide.title) {
+      lines.push(`## ${slide.title}`);
+    }
+    if (slide.body) {
+      lines.push('');
+      lines.push(slide.body);
+    }
+    if (slide.keyPoints && slide.keyPoints.length) {
+      lines.push('');
+      for (const point of slide.keyPoints) {
+        lines.push(`- ${point}`);
+      }
+    }
+    if (slide.source) {
+      lines.push('');
+      lines.push(`> 출처: ${slide.source}`);
+    }
+    lines.push('');
+  }
+
+  if (cardData.ctaMessage) {
+    lines.push(`## 요약`);
+    lines.push('');
+    lines.push(cardData.ctaMessage);
+  }
+
+  return lines.join('\n').trim();
 }
 
 /**

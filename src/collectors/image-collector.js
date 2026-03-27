@@ -32,9 +32,10 @@ function resolveKeyword(rawKeyword, category) {
 /**
  * 네이버 이미지 검색 API — 한국어 키워드 전용 (1순위)
  * 이재명 대통령, 코스피 주식 등 한국 뉴스 이미지에 최적화
+ * 각 결과를 { link, thumbnail } 형태로 반환 (link 실패 시 thumbnail 사용)
  */
 async function searchNaver(keyword) {
-  if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET || !keyword) return null;
+  if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET || !keyword) return [];
 
   try {
     const res = await axios.get('https://openapi.naver.com/v1/search/image', {
@@ -48,13 +49,17 @@ async function searchNaver(keyword) {
     const items = res.data.items || [];
     if (items.length > 0) {
       console.log(`    → 네이버 "${keyword}" → ${items.length}건`);
-      return items[0].link; // 원본 이미지 URL
+      // link(원본) + thumbnail(네이버 CDN) 둘 다 반환
+      return items.slice(0, 3).map(item => ({
+        link: item.link,
+        thumbnail: item.thumbnail
+      }));
     }
     console.log(`    → 네이버 "${keyword}" 결과 없음`);
-    return null;
+    return [];
   } catch (err) {
     console.warn(`    ⚠ 네이버 오류: ${err.message}`);
-    return null;
+    return [];
   }
 }
 
@@ -186,32 +191,38 @@ async function collectImagesForNews(items) {
     if (keywordKo) console.log(`  한국어 키워드: ${keywordKo}`);
     console.log(`  영어 키워드: ${keyword}`);
 
-    let url = null;
+    let filePath = null;
     let source = 'none';
 
     // 1순위: 네이버 이미지 (한국어 키워드 — 인물/뉴스에 강함)
+    // link(원본) 실패 시 thumbnail(네이버 CDN)로 자동 폴백
     if (keywordKo) {
-      url = await searchNaver(keywordKo);
-      if (url) source = 'naver';
+      const naverItems = await searchNaver(keywordKo);
+      for (const item of naverItems) {
+        const candidates = [item.link, item.thumbnail].filter(Boolean);
+        for (const candidateUrl of candidates) {
+          filePath = await downloadImage(candidateUrl, filename);
+          if (filePath) { source = 'naver'; break; }
+        }
+        if (filePath) break;
+      }
     }
 
     // 2순위: Pexels (영어 키워드)
-    if (!url) {
-      url = await searchPexels(keyword);
-      if (url) source = 'pexels';
+    if (!filePath) {
+      const pexelsUrl = await searchPexels(keyword);
+      if (pexelsUrl) filePath = await downloadImage(pexelsUrl, filename);
+      if (filePath) source = 'pexels';
     }
 
     // 3순위: Unsplash
-    if (!url) {
-      url = await searchUnsplash(keyword);
-      if (url) source = 'unsplash';
+    if (!filePath) {
+      const unsplashUrl = await searchUnsplash(keyword);
+      if (unsplashUrl) filePath = await downloadImage(unsplashUrl, filename);
+      if (filePath) source = 'unsplash';
     }
 
-    // 3순위: Picsum
-    let filePath = null;
-    if (url) {
-      filePath = await downloadImage(url, filename);
-    }
+    // 최종 폴백: Picsum
     if (!filePath) {
       const seed = keyword.split('').reduce((a, c, i) => a + c.charCodeAt(0) * (i + 1), 0) + i * 137;
       filePath = await downloadPicsum(filename, seed);
