@@ -33,9 +33,8 @@ jobs:
 
       - name: 카드뉴스 파이프라인 실행 (생성 + SNS 게시)
         env:
-          # AI 생성
+          # AI 생성 (Gemini만 사용)
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           # 이미지 수집
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}

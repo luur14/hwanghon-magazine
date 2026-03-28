@@ -1,5 +1,4 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const Groq = require('groq-sdk');
 const fs = require('fs');
 const path = require('path');
 const dayjs = require('dayjs');
@@ -93,16 +92,7 @@ async function callGemini(prompt) {
   return result.response.text();
 }
 
-async function callGroq(prompt) {
-  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  const response = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
-    messages: [{ role: 'user', content: prompt }],
-    temperature: 0.7,
-    max_tokens: 3000
-  });
-  return response.choices[0].message.content;
-}
+
 
 async function generateCardNewsText(newsData) {
   const { news, stock } = newsData;
@@ -165,21 +155,14 @@ JSON만 출력해주세요. 마크다운 코드블록(\`\`\`) 없이 순수 JSON
   const fullPrompt = SYSTEM_PROMPT + '\n\n' + userPrompt;
   let responseText = '';
 
-  // Gemini 우선, 실패 시 Groq 폴백
-  if (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('여기에')) {
-    try {
-      console.log('  Gemini Flash API 호출 중...');
-      responseText = await callGemini(fullPrompt);
-      console.log('  ✓ Gemini 응답 수신');
-    } catch (err) {
-      console.warn(`  ⚠ Gemini 실패 (${err.message.slice(0, 60)}...), Groq 폴백`);
-      responseText = await callGroq(fullPrompt);
-      console.log('  ✓ Groq 폴백 응답 수신');
-    }
-  } else {
-    console.log('  Groq API 호출 중 (Gemini 키 없음)...');
-    responseText = await callGroq(fullPrompt);
+  // Gemini만 사용
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.includes('여기에')) {
+    throw new Error('GEMINI_API_KEY가 설정되지 않았습니다');
   }
+
+  console.log('  Gemini Flash API 호출 중...');
+  responseText = await callGemini(fullPrompt);
+  console.log('  ✓ Gemini 응답 수신');
 
   // JSON 추출 (```json ... ``` 또는 순수 JSON)
   const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/) ||

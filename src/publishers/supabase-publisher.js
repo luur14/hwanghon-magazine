@@ -85,31 +85,7 @@ async function generateWithGemini(newsContext, commentNicknames) {
   return JSON.parse(text);
 }
 
-/**
- * Groq 폴백
- */
-async function generateWithGroq(newsContext, commentNicknames) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return null;
-
-  const Groq = require('groq-sdk');
-  const groq = new Groq({ apiKey });
-
-  const userPrompt = `뉴스 주제: ${newsContext}\n\n댓글 작성자 닉네임: ${commentNicknames.join(', ')}`;
-
-  const resp = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
-    messages: [
-      { role: 'system', content: COMMUNITY_PROMPT },
-      { role: 'user', content: userPrompt },
-    ],
-    temperature: 0.9,
-    max_tokens: 1024,
-    response_format: { type: 'json_object' },
-  });
-
-  return JSON.parse(resp.choices[0].message.content);
-}
+// Groq 제거 — Gemini만 사용
 
 /**
  * 카드뉴스 데이터를 참고하여 커뮤니티 게시글 + 댓글 생성 후 Supabase에 등록
@@ -146,21 +122,13 @@ async function publishToSupabase(cardData) {
   const postAuthor = shuffled[0];
   const commentAuthors = shuffled.slice(1);
 
-  // AI로 게시글 + 댓글 생성
+  // AI로 게시글 + 댓글 생성 (Gemini만 사용)
   let generated = null;
   try {
     generated = await generateWithGemini(newsContext, commentAuthors.map(u => u.nick));
   } catch (err) {
-    console.log(`  ⚠ Gemini 실패 (${err.message}), Groq 시도...`);
-  }
-
-  if (!generated) {
-    try {
-      generated = await generateWithGroq(newsContext, commentAuthors.map(u => u.nick));
-    } catch (err) {
-      console.error(`  ❌ AI 생성 실패: ${err.message}`);
-      return null;
-    }
+    console.error(`  ❌ Gemini 생성 실패: ${err.message}`);
+    return null;
   }
 
   if (!generated?.post?.title || !generated?.post?.content) {
