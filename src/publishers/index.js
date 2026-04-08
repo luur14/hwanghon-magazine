@@ -6,7 +6,6 @@ const { uploadImagesToPublic } = require('./image-uploader');
 const { publishInstagram } = require('./instagram-publisher');
 const { publishFacebook } = require('./facebook-publisher');
 const { publishBand } = require('./band-publisher');
-const { publishTelegram } = require('./telegram-publisher');
 const { publishToSupabase } = require('./supabase-publisher');
 const { publishToInfo } = require('./info-publisher');
 
@@ -37,27 +36,6 @@ function buildCaption(cardData) {
   return `${themeEmoji} ${title}\n\n${slideLines}\n\n${hashtags}`;
 }
 
-/**
- * HTML 캡션 (Telegram용)
- */
-function buildHtmlCaption(cardData) {
-  const title = cardData.coverTitle.replace(/\\n/g, ' ').replace(/\n/g, ' ').trim();
-  const theme = cardData.coverCategory || '';
-
-  const themeEmoji = {
-    '주식': '📈',
-    '재테크': '💰',
-    '건강': '🌿',
-    '최신뉴스': '📰'
-  }[theme] || '📌';
-
-  const slideLines = cardData.slides
-    .slice(0, 5)
-    .map(s => `• ${s.title}`)
-    .join('\n');
-
-  return `<b>${themeEmoji} ${title}</b>\n\n${slideLines}\n\n#황혼즈음에 #시니어 #50대 #60대 #카드뉴스`;
-}
 
 /**
  * 전체 SNS 게시 실행
@@ -69,7 +47,6 @@ async function publishAll(imagePaths, cardData) {
   console.log('\n━━━ [5/5] SNS 게시 ━━━');
 
   const caption = buildCaption(cardData);
-  const htmlCaption = buildHtmlCaption(cardData);
   const results = {};
 
   // Instagram & Facebook은 공개 URL 필요 → ImgBB 업로드
@@ -102,9 +79,6 @@ async function publishAll(imagePaths, cardData) {
   // Band (직접 파일 업로드)
   results.band = await publishBand(imagePaths, caption);
 
-  // Telegram (직접 파일 업로드)
-  results.telegram = await publishTelegram(imagePaths, htmlCaption);
-
   // Supabase (앱 내 커뮤니티 게시글 자동 등록)
   results.supabase = await publishToSupabase(cardData);
 
@@ -113,7 +87,7 @@ async function publishAll(imagePaths, cardData) {
 
   // 결과 요약
   console.log('\n  게시 결과:');
-  const platforms = ['instagram', 'facebook', 'band', 'telegram', 'supabase', 'info'];
+  const platforms = ['instagram', 'facebook', 'band', 'supabase', 'info'];
   for (const p of platforms) {
     const status = results[p] ? '✅' : '⏭';
     console.log(`    ${status} ${p}`);
