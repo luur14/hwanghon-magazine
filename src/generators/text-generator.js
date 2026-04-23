@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 const fs = require('fs');
 const path = require('path');
 const dayjs = require('dayjs');
@@ -71,6 +72,7 @@ const SYSTEM_PROMPT = `당신은 "황혼 매거진"의 수석 카드뉴스 에�
     { "slideNum": 6, "category": "...", "title": "...", "body": "...", "keyPoints": ["...", "..."], "source": "...", "imageKeyword": "...", "imageKeywordKo": "..." }
   ],
   "ctaMessage": "오늘의 인사이트 요약 문구 (20~30자)",
+  "aiComment": "AI가 뉴스를 보고 던지는 한마디 (캐주얼하고 재치있게, 20~35자). 예시: '달러가 더 오를 것 같은데요?', '이러다 금리 또 올리는 거 아닌가 몰라요', '연금 받으려면 100세까지 살아야 하나...'",
   "summaryBoxes": [
     {"num": "5,781", "label": "코스피"},
     {"num": "-2.0%", "label": "나스닥"},
@@ -79,9 +81,6 @@ const SYSTEM_PROMPT = `당신은 "황혼 매거진"의 수석 카드뉴스 에�
   "previewItems": ["뉴스1 미리보기 12자", "뉴스2 미리보기 12자", "뉴스3 미리보기 12자", "뉴스4 미리보기 12자", "뉴스5 미리보기 12자"]
 }`;
 
-/**
- * Gemini Flash로 생성 시도, 실패 시 Groq 폴백
- */
 async function callGemini(prompt) {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
@@ -90,6 +89,17 @@ async function callGemini(prompt) {
     generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
   });
   return result.response.text();
+}
+
+async function callGroq(prompt) {
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  const completion = await groq.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+    max_tokens: 8192
+  });
+  return completion.choices[0].message.content;
 }
 
 
@@ -155,14 +165,30 @@ JSON만 출력해주세요. 마크다운 코드블록(\`\`\`) 없이 순수 JSON
   const fullPrompt = SYSTEM_PROMPT + '\n\n' + userPrompt;
   let responseText = '';
 
-  // Gemini만 사용
-  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.includes('여기에')) {
-    throw new Error('GEMINI_API_KEY가 설정되지 않았습니다');
+  // Gemini 우선 시도, 쿼터 초과(429) 시 Groq 폴백
+  try {
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.includes('여기에')) {
+      throw new Error('GEMINI_API_KEY 미설정');
+    }
+    console.log('  Gemini Flash API 호출 중...');
+    responseText = await callGemini(fullPrompt);
+    console.log('  ✓ Gemini 응답 수신');
+  } catch (geminiErr) {
+    const isRetryable = geminiErr.message?.includes('429') ||
+                        geminiErr.message?.includes('503') ||
+                        geminiErr.message?.includes('Too Many Requests') ||
+                        geminiErr.message?.includes('quota') ||
+                        geminiErr.message?.includes('Service Unavailable') ||
+                        geminiErr.message?.includes('미설정');
+    if (isRetryable) {
+      console.log(`  ⚠ Gemini 실패 (${geminiErr.message.slice(0, 60)}...), Groq 폴백...`);
+      if (!process.env.GROQ_API_KEY) throw new Error('GROQ_API_KEY도 없음, 생성 불가');
+      responseText = await callGroq(fullPrompt);
+      console.log('  ✓ Groq 응답 수신');
+    } else {
+      throw geminiErr;
+    }
   }
-
-  console.log('  Gemini Flash API 호출 중...');
-  responseText = await callGemini(fullPrompt);
-  console.log('  ✓ Gemini 응답 수신');
 
   // JSON 추출 (```json ... ``` 또는 순수 JSON)
   const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/) ||
